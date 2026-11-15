@@ -24,6 +24,9 @@ jobs:
       - uses: actions/checkout@08eba0b27e820071cde6df949e0beb9ba4906955 # v4.3.0
         with:
           persist-credentials: false
+      # Before the CLI, which refuses to start without Node 24 on PATH. The repository's own composite
+      # action: the pnpm version from packageManager, Node 24, the store cache and a frozen install.
+      - uses: ./.github/actions/setup-pnpm
       - name: Install the nb-studio CLI
         env:
           NB_STUDIO_API_KEY: ${{ secrets.NB_STUDIO_API_KEY }}
@@ -35,8 +38,6 @@ jobs:
           echo "$RUNNER_TEMP/nb-studio/bin" >> "$GITHUB_PATH"
           printf %s "$NB_STUDIO_API_KEY" | NB_STUDIO_KEYCHAIN=off "$RUNNER_TEMP/nb-studio/bin/nb-studio" login --server "$NB_STUDIO_URL" --api-key-stdin
       - run: nb-studio build status --app "$APP_ID" --state building --logs "$LOGS"
-      # The repository's own composite action: the pnpm version from packageManager, Node 24, the store cache and a frozen install.
-      - uses: ./.github/actions/setup-pnpm
       # Leaves storage/exports/dist.tar.gz: dist/ and config.example.yml.
       - run: pnpm build --target linux-x64 --node-version 24 --tar
       # The App, made in the environment when it is missing (the key must be allowed to).
